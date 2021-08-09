@@ -1,0 +1,11 @@
+# Composer
+composer.phar
+
+# PHPUnit
+phpunit.phar
+phpunit.xml
+
+# idea
+.idea/
+
+vendor/
