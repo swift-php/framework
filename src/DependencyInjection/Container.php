@@ -205,4 +205,21 @@ class Container implements ContainerInterface
         return $definition;
     }
 
+    /**
+     * @param $object
+     * @throws ReflectionException
+     */
+    private function configure($object)
+    {
+        $reflection = new ReflectionObject($object);
+        $className = $reflection->getName();
+        if (isset($this->injectableProperties[$className])) {
+            foreach ($this->injectableProperties[$className] as $k => $v) {
+                $property = $reflection->getProperty($k);
+                $property->setAccessible(ReflectionProperty::IS_PUBLIC);
+//                $property->setValue($object, $this->loadInjectableProperty($className, $k));
+            }
+        }
+    }
+
 }
