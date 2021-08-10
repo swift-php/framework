@@ -29,7 +29,7 @@ class ConfigurationAnnotationLoader extends AbstractAnnotationLoader
             $name = $reflection->getName();
             $container->register($name,$name);
 
-            if ($annotation->isLazy()) {
+            if (!$annotation->isLazy()) {
                 $container->get($name);
             }
         }
