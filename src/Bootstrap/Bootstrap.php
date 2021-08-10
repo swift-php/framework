@@ -50,7 +50,7 @@ class Bootstrap
         }
         $file = sprintf("%s/config/config.php",self::$rootDir);
         if (!file_exists($file)) {
-            die(Color::error("can not load config file {$file}") . "\n");
+            $this->logger->error(Color::error("can not load config file {$file}") . "\n");
         }
 
         Configuration::getInstance()->loadFile($file);
