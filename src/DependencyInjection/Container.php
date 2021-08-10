@@ -60,30 +60,29 @@ class Container implements ContainerInterface
     {
         $this->logger->debug('Inject service: ' . $id);
 
-        if (isset($this->services[$id])) {
-            return $this->services[$id];
-        }
-
-        if (isset($this->injectableMethods[$id])) {
-            return $this->loadInjectableMethod($id);
-        }
+//        if (isset($this->injectableMethods[$id])) {
+//            return $this->loadInjectableMethod($id);
+//        }
 
         $definition = $this->definitions[$id] ?? null;
 
         if (!$definition) {
             throw new ServiceNotFoundException($id);
         }
-
-        if ($service = $definition->getInstance()) {
-            return $service;
-        }
+//
+//        if ($service = $definition->getInstance()) {
+//            return $service;
+//        }
 
         try {
             $reflection = new ReflectionClass($definition->getClass());
         } catch (ReflectionException $exception) {
             throw new ServiceNotFoundException($id);
         }
-
+        $this->logger->debug('Inject service111: ', [
+            'data'  =>  $reflection->getConstructor(),
+            'data1' =>  $reflection->getConstructor()->getParameters()
+        ]);
         // 处理构造器参数依赖
         if ($constructor = $reflection->getConstructor()) {
             foreach ($constructor->getParameters() as $parameter) {
@@ -200,211 +199,10 @@ class Container implements ContainerInterface
                 $this->configure($object);
             }
         );
-        $this->addDefinition($id, $definition, $class);
+        $this->definitions[$class] = $definition;
+        $this->definitions[$id] = $definition;
 
         return $definition;
     }
-
-    /**
-     * @param string $className
-     * @param string $propertyName
-     * @return mixed
-     */
-    private function loadInjectableProperty(string $className, string $propertyName)
-    {
-        $this->logger->debug(
-            sprintf(
-                'Loading injectable property: %s::$%s',
-                $className,
-                $propertyName
-            )
-        );
-
-        $definition = $this->injectableProperties[$className][$propertyName];
-        array_unshift($definition['context'], $definition['property']);
-
-        return call_user_func_array(
-            $definition['loader'],
-            $definition['context']
-        );
-    }
-
-    /**
-     * @param $object
-     * @throws ReflectionException
-     */
-    private function configure($object)
-    {
-        $reflection = new ReflectionObject($object);
-        $className = $reflection->getName();
-        if (isset($this->injectableProperties[$className])) {
-            foreach ($this->injectableProperties[$className] as $k => $v) {
-                $property = $reflection->getProperty($k);
-                $property->setAccessible(ReflectionProperty::IS_PUBLIC);
-                $property->setValue($object, $this->loadInjectableProperty($className, $k));
-            }
-        }
-    }
-
-
-    /**
-     * @param string $id
-     * @param Definition $definition
-     * @param string|null $sourceClass
-     * @throws ReflectionException
-     */
-    public function addDefinition(
-        string $id,
-        Definition $definition,
-        string $sourceClass = null
-    ) {
-        $class = $sourceClass ?? $definition->getClass();
-        $this->definitions[$id] = $definition;
-        $this->definitions[$class] = $definition;
-
-        if (!class_exists($class)) {
-            return;
-        }
-
-        foreach ((new ReflectionClass($class))->getInterfaceNames() as $name) {
-            $this->definitions[$name] = $definition;
-        }
-    }
-
-    /**
-     * @param string $id
-     * @return Definition
-     */
-    public function getDefinition(string $id): Definition
-    {
-        if (!isset($this->definitions[$id])) {
-            throw new ServiceNotFoundException($id);
-        }
-
-        return $this->definitions[$id];
-    }
-
-    /**
-     * @param string $id
-     * @param ReflectionMethod $method
-     * @param string[] $dependsOn
-     * @throws
-     * @internal
-     */
-    public function addInjectableMethod(
-        string $id,
-        ReflectionMethod $method,
-        array $dependsOn = []
-    ) {
-        $this->logger->debug(
-            sprintf(
-                'Add injectable method: %s::%s => %s',
-                $method->getDeclaringClass()->getName(),
-                $method->getName(),
-                $id
-            )
-        );
-
-        $this->injectableMethods[$id] = [
-            'method' => $method,
-            'dependsOn' => $dependsOn
-        ];
-
-        $returnType = $method->getReturnType()
-            ? $method->getReturnType()->getName()
-            : null;
-
-        if (
-            $returnType
-            && (class_exists($returnType) || interface_exists($returnType))
-        ) {
-            $reflector = new ReflectionClass($returnType);
-            $this->injectableMethods[$returnType] = $this->injectableMethods[$id];
-
-            foreach ($reflector->getInterfaceNames() as $name) {
-                $this->injectableMethods[$name] = $this->injectableMethods[$id];
-            }
-        }
-    }
-
-    /**
-     * @param ReflectionProperty $property
-     * @param callable $loader 注入时回调的函数
-     * @param array $context 上下文数据
-     * @internal
-     */
-    public function addInjectableProperty(
-        ReflectionProperty $property,
-        callable $loader,
-        array $context = []
-    ) {
-        $className = $property->getDeclaringClass()->getName();
-        $propertyName = $property->getName();
-        $this->logger->debug(
-            sprintf(
-                'Add injectable property: %s::$%s => %s',
-                $className,
-                $propertyName,
-                json_encode($context)
-            )
-        );
-        $this->injectableProperties[$className][$propertyName] = [
-            'property' => $property,
-            'context' => $context,
-            'loader' => $loader
-        ];
-    }
-
-    /**
-     * @param string $id
-     * @return mixed
-     * @throws ReflectionException
-     * @throws ServiceNotFoundException
-     */
-    private function loadInjectableMethod(string $id)
-    {
-        $this->logger->debug('Loading injectable method: ' . $id);
-
-        /* @var ReflectionMethod $reflection */
-        $reflection = $this->injectableMethods[$id]['method'];
-        $dependsOn = $this->injectableMethods[$id]['dependsOn'];
-        $instance = $this->get($reflection->getDeclaringClass()->getName());
-
-        // 依赖其它服务
-        if ($dependsOn) {
-            $this->logger->debug(
-                'Resolving depends-on',
-                [
-                    'depends_on' => $dependsOn
-                ]
-            );
-            foreach ($dependsOn as $item) {
-                $this->get($item);
-            }
-        }
-
-        // 参数注入
-        $params = [];
-
-        foreach ($reflection->getParameters() as $parameter) {
-            $name = $parameter->getName();
-            $type = $parameter->getType()->getName();
-
-            $this->logger->debug(sprintf('Resolving parameter: %s %s', $id, $name));
-
-            if ($this->has($name)) {
-                $params[] = $this->get($name);
-            } elseif ($this->has($type)) {
-                $params[] = $this->get($type);
-            }
-        }
-
-        $result = call_user_func_array([$instance, $reflection->getName()], $params);
-
-        $this->set($id, $result);
-
-        return $result;
-    }
-
 
 }
