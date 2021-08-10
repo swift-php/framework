@@ -54,7 +54,7 @@ class ConfigManager
     public function setConfiguration(Configuration $config)
     {
         $this->config = $config;
-        $this->rootDir = File::getRootDir();
+        $this->rootDir = Bootstrap::getRootDir();
         $this->runtimeDir = $this->rootDir . '/temp/runtime';
         $this->logger = LoggerFactory::getInstance()->getLogger();
 //        $this->logger->info($this->rootDir);

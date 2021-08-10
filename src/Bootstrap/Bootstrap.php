@@ -24,7 +24,7 @@ class Bootstrap
     /**
      * @var string
      */
-    private $rootDir = '';
+    private static $rootDir = '';
 
     /**
      * @var LoggerInterface
@@ -36,16 +36,19 @@ class Bootstrap
      */
     private $application;
 
-    public function __construct()
+    public function __construct(string $rootDir = '')
     {
+        self::$rootDir = $rootDir;
         $this->eventDispatcher = new EventDispatcher();
         $this->initialize();
     }
 
     public function loadConfiguration()
     {
-        $this->rootDir = File::getRootDir();
-        $file = sprintf("%s/config/config.php",$this->rootDir);
+        if (!self::$rootDir) {
+            self::$rootDir = self::getRootDir();
+        }
+        $file = sprintf("%s/config/config.php",self::$rootDir);
         if (!file_exists($file)) {
             die(Color::error("can not load config file {$file}") . "\n");
         }
@@ -61,6 +64,13 @@ class Bootstrap
         $this->logger = LoggerFactory::getInstance()->getLogger();
         $this->logger->info('Booting init');
         $this->loadConfiguration();
+    }
+
+    public static function getRootDir() {
+        if (!self::$rootDir) {
+            self::$rootDir = File::getRootDir();
+        }
+        return self::$rootDir;
     }
 
     /**
