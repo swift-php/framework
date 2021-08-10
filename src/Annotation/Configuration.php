@@ -11,5 +11,24 @@ use Doctrine\Common\Annotations\Annotation\Target;
  */
 class Configuration
 {
+    /**
+     * @var bool
+     */
+    public $lazy = true;
 
+    /**
+     * @return bool
+     */
+    public function isLazy(): bool
+    {
+        return $this->lazy;
+    }
+
+    /**
+     * @param bool $lazy
+     */
+    public function setLazy(bool $lazy): void
+    {
+        $this->lazy = $lazy;
+    }
 }
