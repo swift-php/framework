@@ -17,7 +17,7 @@ class Injectable
     /**
      * @var string
      */
-    private $name = '';
+    public $name = '';
 
     public function getName(): string
     {
