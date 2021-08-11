@@ -54,9 +54,6 @@ class AnnotationLoaderManager
     public function load()
     {
         foreach ($this->loaders as $loader) {
-            $this->logger->info('aaaabbbccc', [
-                'data'  =>  $loader
-            ]);
             $loader->load();
         }
     }

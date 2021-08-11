@@ -5,6 +5,7 @@ namespace Swift\Framework\Configurator;
 
 
 use Swift\Framework\Annotation\ConfigurationAnnotationLoader;
+use Swift\Framework\Annotation\InjectableAnnotationLoader;
 use Swift\Framework\AnnotationLoader\AnnotationLoaderManager;
 use Swift\Framework\Utils\File;
 
@@ -91,7 +92,7 @@ class Configurator implements ConfiguratorInterface
 //
 //        // Configuration
 //        $manager->register(new ConfigurationAnnotationLoader());
-//        $manager->register(new InjectableAnnotationLoader());
+        $manager->register(new InjectableAnnotationLoader());
 //
 //        // Aspect
 //        $manager->register(new AspectAnnotationLoader());

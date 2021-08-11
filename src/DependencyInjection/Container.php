@@ -11,7 +11,7 @@ use ReflectionProperty;
 use Swift\Component\Singleton;
 use Swift\Framework\Exception\ServiceNotFoundException;
 use Swift\Framework\Logger\LoggerFactory;
-use Symfony\Component\DependencyInjection\Reference;
+
 
 class Container implements ContainerInterface
 {
@@ -69,10 +69,10 @@ class Container implements ContainerInterface
         if (!$definition) {
             throw new ServiceNotFoundException($id);
         }
-//
-//        if ($service = $definition->getInstance()) {
-//            return $service;
-//        }
+
+        if ($service = $definition->getService()) {
+            return $service;
+        }
 
         try {
             $reflection = new ReflectionClass($definition->getClass());
@@ -84,10 +84,9 @@ class Container implements ContainerInterface
             'data1' =>  $reflection->getConstructor()->getParameters()
         ]);
         // 处理构造器参数依赖
-        if ($constructor = $reflection->getConstructor()) {
-            foreach ($constructor->getParameters() as $parameter) {
+        if ($configurator = $reflection->getConstructor()) {
+            foreach ($configurator->getParameters() as $parameter) {
                 $name = $parameter->getName();
-
                 $this->logger->debug(
                     sprintf(
                         'Resolving constructor parameter: %s %s',
@@ -95,15 +94,13 @@ class Container implements ContainerInterface
                         $name
                     )
                 );
-
                 $idList = [$name];
-
+                //返回参数的类型
                 if ($type = $parameter->getType()) {
                     $idList[] = $type->getName();
                 }
-
                 foreach ($idList as $item) {
-                    if ($this->has($item)) {
+                    if ($this->has($item))  {
                         $definition->addArgument(new Reference($item));
                         break;
                     }
@@ -113,16 +110,9 @@ class Container implements ContainerInterface
 
         // 注入构造器参数
         $arguments = [];
-        foreach ($definition->getArguments() as $argument) {
-            $arguments[] = $argument instanceof Reference
-                ? $this->get($argument->getId())
-                : $argument;
-        }
 
-        // 处理属性
-        foreach ($definition->getProperties() as $name => $value) {
-            $property = $reflection->getProperty($name);
-            $property->setValue($value);
+        foreach ($definition->getArguments() as $argument) {
+            $arguments[] = $argument instanceof Reference ? $this->get($argument) : $argument;
         }
 
         // 实例化
@@ -130,26 +120,13 @@ class Container implements ContainerInterface
             ? $reflection->newInstanceArgs($arguments)
             : $reflection->newInstance();
 
-        // 回调方法
-        foreach ($definition->getMethodCalls() as $method) {
-            $params = [];
-
-            foreach ($method[1] as $param) {
-                $params[] = $param instanceof Reference
-                    ? $this->get($param->getId())
-                    : $param;
-            }
-
-            call_user_func_array([$service, $method[0]], $params);
-        }
-
         // 回调configurator
         if ($configurator = $definition->getConfigurator()) {
             $configurator($service);
         }
 
         $this->services[$id] = $service;
-        $definition->setInstance($service);
+        $definition->setService($service);
 
         return $service;
     }
@@ -165,7 +142,7 @@ class Container implements ContainerInterface
         $this->services[$id] = $service;
 
         if (isset($this->definitions[$id])) {
-            $this->definitions[$id]->setInstance($service);
+            $this->definitions[$id]->setService($service);
         }
     }
 
@@ -192,17 +169,31 @@ class Container implements ContainerInterface
         $this->logger->debug(sprintf('Register service: %s', $class));
 
         // Get aspect proxy class
-
         $definition = new Definition($class);
-        $definition->setConfigurator(
-            function ($object) {
-                $this->configure($object);
-            }
-        );
+
         $this->definitions[$class] = $definition;
         $this->definitions[$id] = $definition;
 
         return $definition;
+    }
+
+    public function addInjectableMethod(string $id, ReflectionMethod $method)
+    {
+        $this->logger->debug(
+            sprintf(
+                'Add injectable method: %s::%s => %s',
+                $method->getDeclaringClass()->getName(),
+                $method->getName(),
+                $id
+            )
+        );
+
+        $this->injectableMethods[$id] = [
+            'method'    =>  $method
+        ];
+        $returnType = $method->getReturnType()
+            ? $method->getReturnType()->getName()
+            : null;
     }
 
     /**

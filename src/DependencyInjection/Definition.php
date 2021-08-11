@@ -10,7 +10,7 @@ class Definition extends SymfonyDefinition
 
     private $instance = null;
 
-    public function setInstance($instance)
+    public function setService($instance)
     {
         $this->instance = $instance;
     }
@@ -18,7 +18,7 @@ class Definition extends SymfonyDefinition
     /**
      * @return mixed
      */
-    public function getInstance()
+    public function getService()
     {
         return $this->instance;
     }
