@@ -20,7 +20,7 @@ class ValueAnnotationLoader extends AbstractAnnotationLoader
         /* @var Value $annotation */
         if ($reflection instanceof ReflectionProperty) {
             $this->logger->info('property name',[
-                'data'  =>    $reflection->getValue(),
+                'data'  =>    $reflection->getName(),
                 'data1' =>  $annotation->getValue()
             ]);
             $reflection->getName();
