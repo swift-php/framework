@@ -177,6 +177,11 @@ class Container implements ContainerInterface
         return $definition;
     }
 
+    /**
+     * @param string $id
+     * @param ReflectionMethod $method
+     * @throws ReflectionException
+     */
     public function addInjectableMethod(string $id, ReflectionMethod $method)
     {
         $this->logger->debug(
@@ -191,9 +196,50 @@ class Container implements ContainerInterface
         $this->injectableMethods[$id] = [
             'method'    =>  $method
         ];
+
         $returnType = $method->getReturnType()
             ? $method->getReturnType()->getName()
             : null;
+        if ($returnType && (class_exists($returnType) || interface_exists($returnType))) {
+            $reflector = new ReflectionClass($returnType);
+
+            $this->injectableMethods[$returnType] = $this->injectableMethods[$id];
+            $this->logger->info('addInjectableMethod', [
+                'data'  =>  $this->injectableMethods
+            ]);
+            foreach ($reflector->getInterfaceNames() as $name) {
+                $this->injectableMethods[$name] = $this->injectableMethods[$id];
+            }
+        }
+    }
+
+    public function addInjectableProperty(string $id, callable $call,array $context)
+    {
+
+    }
+
+    /**
+     * @param string $id
+     * @throws ReflectionException
+     */
+    public function loadInjectableMethod(string $id)
+    {
+        $this->logger->debug('Loading Injectable Method: ' . $id);
+        /* @var ReflectionMethod $reflection*/
+        $reflection = $this->injectableMethods[$id]['method'];
+        $instance = $this->get($reflection->getDeclaringClass()->getName());
+
+        $params = [];
+        foreach ($reflection->getParameters() as $parameter) {
+            $name = $parameter->getName();
+            $type = $parameter->getType()->getName();
+            $this->logger->debug('Loading reflection parameter: ' . $name);
+            $this->logger->debug('Loading reflection parameter type: ' . $type);
+        }
+        $result = call_user_func_array([$instance,$reflection->getName()],$params);
+
+        $this->set($id, $result);
+        return $result;
     }
 
     /**
