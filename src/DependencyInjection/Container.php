@@ -60,9 +60,9 @@ class Container implements ContainerInterface
     {
         $this->logger->debug('Inject service: ' . $id);
 
-//        if (isset($this->injectableMethods[$id])) {
-//            return $this->loadInjectableMethod($id);
-//        }
+        if (isset($this->injectableMethods[$id])) {
+            return $this->loadInjectableMethod($id);
+        }
 
         $definition = $this->definitions[$id] ?? null;
 
@@ -171,6 +171,10 @@ class Container implements ContainerInterface
         // Get aspect proxy class
         $definition = new Definition($class);
 
+        $definition->setConfigurator(function ($object) {
+            $this->configure($object);
+        });
+
         $this->definitions[$class] = $definition;
         $this->definitions[$id] = $definition;
 
@@ -213,9 +217,35 @@ class Container implements ContainerInterface
         }
     }
 
-    public function addInjectableProperty(string $id, callable $call,array $context)
+    public function addInjectableProperty(ReflectionProperty $property, callable $call,array $context)
     {
+        $className = $property->getDeclaringClass()->getName();
+        $propertyName = $property->getName();
 
+        $this->logger->debug(sprintf(
+            'Add Injectable Property: %s::$%s => %s',
+            $className,
+            $propertyName,
+            json_encode($context)
+        ));
+
+        $this->injectableProperties[$className][$propertyName] = [
+            'property'  =>  $property,
+            'loader'    =>  $call,
+            'context'   =>  $context
+        ];
+    }
+
+    public function loadInjectableProperty(string $className, string $propertyName)
+    {
+        $this->logger->debug(sprintf(
+            'loading Injectable Property: %s::$%s',
+            $className,
+            $propertyName
+        ));
+        $definition = $this->injectableProperties[$className][$propertyName];
+        array_unshift($definition['context'], $definition['property']);
+        return call_user_func_array($definition['loader'],$definition['context']);
     }
 
     /**
@@ -254,7 +284,7 @@ class Container implements ContainerInterface
             foreach ($this->injectableProperties[$className] as $k => $v) {
                 $property = $reflection->getProperty($k);
                 $property->setAccessible(ReflectionProperty::IS_PUBLIC);
-//                $property->setValue($object, $this->loadInjectableProperty($className, $k));
+                $property->setValue($object, $this->loadInjectableProperty($className, $k));
             }
         }
     }

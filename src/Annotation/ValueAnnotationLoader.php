@@ -21,10 +21,19 @@ class ValueAnnotationLoader extends AbstractAnnotationLoader
         if ($reflection instanceof ReflectionProperty) {
             $this->logger->info('property name',[
                 'data'  =>    $reflection->getName(),
-                'data1' =>  $annotation->getValue()
+                'data1' =>  $reflection->getDeclaringClass()->getName()
             ]);
             $reflection->getName();
             $annotation->getValue();
+            $container->addInjectableProperty(
+                $reflection,
+                function (ReflectionProperty $property, string $value) {
+
+                },
+                [
+                    $annotation->getValue()
+                ]
+            );
 //            $container->addInjectableProperty(
 //                $reflection,
 //                $annotation->getValue(),
