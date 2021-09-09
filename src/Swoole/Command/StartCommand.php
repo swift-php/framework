@@ -58,14 +58,14 @@ class StartCommand extends AbstractCommand
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $config = Configuration::getInstance()->getConf();
+        $config = Configuration::getInstance();
 
         GlobalEventDispatcher::addListener(
             ProcessExitEvent::class,
             [$this, 'exit']
         );
 
-        $list = $config->get('swoole.servers');
+        $list = $config->getConf('swoole.servers');
         if (!empty($list)) {
             $this->logger->info(sprintf('Starting %d server(s)...', count($list)));
             foreach ($list as $options) {
