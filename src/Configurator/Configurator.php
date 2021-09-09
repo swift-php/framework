@@ -9,7 +9,7 @@ use Swift\Framework\Annotation\InjectableAnnotationLoader;
 use Swift\Framework\Annotation\ValueAnnotationLoader;
 use Swift\Framework\AnnotationLoader\AnnotationLoaderManager;
 use Swift\Framework\Utils\File;
-use Tiny\Framework\Annotation\ConfigurationPropertiesAnnotationLoader;
+use Swift\Framework\Annotation\ConfigurationPropertiesAnnotationLoader;
 
 class Configurator implements ConfiguratorInterface
 {
