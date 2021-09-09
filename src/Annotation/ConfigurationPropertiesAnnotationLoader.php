@@ -1,7 +1,7 @@
 <?php
 
 
-namespace Tiny\Framework\Annotation;
+namespace Swift\Framework\Annotation;
 
 
 use Reflector;
