@@ -7,7 +7,9 @@ namespace Swift\Framework\Annotation;
 use ReflectionProperty;
 use Reflector;
 use Swift\Framework\AnnotationLoader\AbstractAnnotationLoader;
+use Swift\Framework\Config\ConfigManager;
 use Swift\Framework\DependencyInjection\Container;
+use Tiny\Framework\Annotation\ConfigurationPropertiesAnnotationLoader;
 
 class ValueAnnotationLoader extends AbstractAnnotationLoader
 {
@@ -23,38 +25,27 @@ class ValueAnnotationLoader extends AbstractAnnotationLoader
                 'data'  =>    $reflection->getName(),
                 'data1' =>  $reflection->getDeclaringClass()->getName()
             ]);
-            $reflection->getName();
-            $annotation->getValue();
             $container->addInjectableProperty(
                 $reflection,
                 function (ReflectionProperty $property, string $value) {
+                    $class = $property->getDeclaringClass();
+                    $config = ConfigManager::getInstance()->getConfiguration();
 
+                    if (preg_match('/\${.+)(:([^}]+))?}/', $value, $matches)) {
+                        $prefix = ConfigurationPropertiesAnnotationLoader::getPropertiesPrefix($class);
+                        return $config->getConf(($prefix ? ($prefix . '.') : '') . $matches[1]);
+                    }
+                    return $value;
                 },
                 [
                     $annotation->getValue()
                 ]
             );
-//            $container->addInjectableProperty(
-//                $reflection,
-//                $annotation->getValue(),
-//                function (ReflectionProperty $property, string $value) {
-//                    $class = $property->getDeclaringClass();
-//                    $config = $this->getConfiguration($class);
-//
-//                    // @Value("${property.key:defaultValue}")
-//                    if (preg_match('/\${(.+)(:([^}]+))?}/', $value, $matches)) {
-//                        $prefix = ConfigurationPropertiesAnnotationLoader
-//                            ::getPropertiesPrefix($class);
-//
-//                        return $config->get(
-//                            ($prefix ? ($prefix . '.') : '') . $matches[1],
-//                            $matches[3] ?? null
-//                        );
-//                    }
-//
-//                    return $value;
-//                }
-//            );
         }
+    }
+
+    private function getConfiguration(string $class): Configuration
+    {
+
     }
 }

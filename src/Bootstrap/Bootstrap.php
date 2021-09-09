@@ -84,6 +84,11 @@ class Bootstrap
         $this->logger->info('application ready ...');
     }
 
+    public function getApplication():ApplicationInterface
+    {
+        return $this->application;
+    }
+
     public function run()
     {
         return $this->application->run();

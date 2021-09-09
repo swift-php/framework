@@ -31,11 +31,11 @@ class ConsoleApplication extends AbstractApplication
 
         $this->app = new Application();
         $this->commandLoader = new CommandLoader();
-//        $this->commandLoader->setContainer($this->container);
-//        $this->app->setCatchExceptions(false);
-//        $this->app->setDispatcher($this->eventDispatcher);
-//        $this->app->setCommandLoader($this->commandLoader);
-//
+        $this->commandLoader->setContainer($this->container);
+        $this->app->setCatchExceptions(false);
+        $this->app->setDispatcher($this->eventDispatcher);
+        $this->app->setCommandLoader($this->commandLoader);
+
 //        $this->handleEvent();
     }
 

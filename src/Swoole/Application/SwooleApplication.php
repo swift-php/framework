@@ -6,6 +6,7 @@ namespace Swift\Framework\Swoole\Application;
 
 use Monolog\Logger;
 use Swift\Framework\Application\ConsoleApplication;
+use Swift\Framework\Swoole\Command\StartCommand;
 
 /**
  * Class SwooleApplication
@@ -23,7 +24,7 @@ class SwooleApplication extends ConsoleApplication
 
 //        $this->logger->pushProcessor(new ContextProcessor());
 
-//        $this->getCommandLoader()->register('start', StartCommand::class);
+        $this->getCommandLoader()->register('start', StartCommand::class);
     }
 
     /**

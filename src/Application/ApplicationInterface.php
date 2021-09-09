@@ -1,6 +1,7 @@
 <?php
 namespace Swift\Framework\Application;
 
+use Symfony\Component\Console\CommandLoader\CommandLoaderInterface;
 use Throwable;
 
 /**
@@ -14,6 +15,11 @@ interface ApplicationInterface
      * @return mixed
      */
     public function run();
+
+    /**
+     * @return CommandLoaderInterface
+     */
+    public function getCommandLoader():CommandLoaderInterface;
 
     /**
      * 错误处理

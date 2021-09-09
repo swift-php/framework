@@ -9,6 +9,7 @@ use Swift\Framework\Annotation\InjectableAnnotationLoader;
 use Swift\Framework\Annotation\ValueAnnotationLoader;
 use Swift\Framework\AnnotationLoader\AnnotationLoaderManager;
 use Swift\Framework\Utils\File;
+use Tiny\Framework\Annotation\ConfigurationPropertiesAnnotationLoader;
 
 class Configurator implements ConfiguratorInterface
 {
@@ -113,6 +114,6 @@ class Configurator implements ConfiguratorInterface
 //        $manager->register(new PropertySourceAnnotationLoader());
 //        $manager->register(new EventSubscriberAnnotationLoader());
 //
-//        $manager->register(new ConfigurationPropertiesAnnotationLoader());
+        $manager->register(new ConfigurationPropertiesAnnotationLoader());
     }
 }

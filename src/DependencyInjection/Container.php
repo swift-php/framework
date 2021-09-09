@@ -159,6 +159,22 @@ class Container implements ContainerInterface
     }
 
     /**
+     * @param string $name
+     * @return array
+     */
+    public function findTaggedServiceIds(string $name): array
+    {
+        $tags = [];
+        foreach ($this->definitions as $id => $definition) {
+            if ($definition->hasTag($name)) {
+                $tags[$id] = $definition->getTag($name);
+            }
+        }
+
+        return $tags;
+    }
+
+    /**
      * @param string $id
      * @param string $class
      * @return Definition
