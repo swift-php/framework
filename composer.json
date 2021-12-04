@@ -14,6 +14,8 @@
     "doctrine/annotations": "^1.8",
     "doctrine/cache": "^1.8",
     "symfony/finder": "^4.3",
+    "psr/http-server-handler": "^1.0",
+    "psr/http-server-middleware": "^1.0",
     "symfony/console": "v5.x",
     "swift-php/component": "dev-main",
     "swift-php/spl": "dev-main",

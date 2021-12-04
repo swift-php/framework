@@ -5,8 +5,10 @@ namespace Swift\Framework\Swoole\Server;
 
 use GuzzleHttp\Psr7\ServerRequest;
 use GuzzleHttp\Psr7\UploadedFile;
+use Psr\Http\Server\RequestHandlerInterface;
 use Psr\Log\LoggerInterface;
 use ReflectionException;
+use Swift\Framework\Http\Request\RequestHandler;
 use Swift\Framework\Logger\LoggerFactory;
 use Swift\Framework\Utils\Options;
 use Swoole\Coroutine;
@@ -33,10 +35,10 @@ class CoroutineHttpServer implements ServerInterface
      */
     private $logger;
 
-//    /**
-//     * @var RequestHandlerInterface
-//     */
-//    private $handler;
+    /**
+     * @var RequestHandlerInterface
+     */
+    private $handler;
 
     /**
      * CoroutineHttpServer constructor.
@@ -48,7 +50,7 @@ class CoroutineHttpServer implements ServerInterface
     {
         $this->logger = LoggerFactory::getInstance()->getLogger();
         $this->setOptions($options);
-//        $this->handler = new RequestHandler();
+        $this->handler = new RequestHandler();
     }
 
     public function setOptions(array $options)
@@ -79,6 +81,8 @@ class CoroutineHttpServer implements ServerInterface
                 $serverParams[strtoupper($name)] = $value;
             }
 
+
+
             $protocol = substr($serverParams['SERVER_PROTOCOL'], 5);
 
             if ($protocol === '1.1') {
@@ -99,43 +103,41 @@ class CoroutineHttpServer implements ServerInterface
                 $serverParams
             );
 
-//            if ($queryParams = $swRequest->get) {
-//                $request = $request->withQueryParams($queryParams);
-//            }
-//
-//            if ($swRequest->post) {
-//                $request = $request->withParsedBody($swRequest->post);
-//            }
-//
-//            if ($files = $swRequest->files) {
-//                $uploadedFiles = [];
-//                foreach ($files as $name => $file) {
-//                    $uploadedFiles[$name] = new UploadedFile(
-//                        $file['tmp_name'],
-//                        $file['size'],
-//                        $file['error'],
-//                        $file['name'],
-//                        $file['type']
-//                    );
-//                }
-//                $request = $request->withUploadedFiles($uploadedFiles);
-//            }
-//
-//            $response = $this->handler->handle($request);
-//
-//            $swResponse->status($response->getStatusCode());
-//            foreach ($response->getHeaders() as $name => $value) {
-//                foreach ($value as $v) {
-//                    $swResponse->setHeader($name, $v);
-//                }
-//            }
-//            $response->getBody()->rewind();
-//            $swResponse->end($response->getBody()->getContents());
+            if ($queryParams = $swRequest->get) {
+                $request = $request->withQueryParams($queryParams);
+            }
+            if ($swRequest->post) {
+                $request = $request->withParsedBody($swRequest->post);
+            }
+
+            if ($files = $swRequest->files) {
+                $uploadedFiles = [];
+                foreach ($files as $name => $file) {
+                    $uploadedFiles[$name] = new UploadedFile(
+                        $file['tmp_name'],
+                        $file['size'],
+                        $file['error'],
+                        $file['name'],
+                        $file['type']
+                    );
+                }
+                $request = $request->withUploadedFiles($uploadedFiles);
+            }
+
+            $response = $this->handler->handle($request);
+            $swResponse->status($response->getStatusCode());
+
+            foreach ($response->getHeaders() as $name => $value) {
+                foreach ($value as $v) {
+                    $swResponse->setHeader($name, $v);
+                }
+            }
+            $response->getBody()->rewind();
+            $swResponse->end($response->getBody()->getContents());
+
         });
 
-        Coroutine::create(function () {
-            $this->server->start();
-        });
+        $this->server->start();
     }
 
     public function close()
