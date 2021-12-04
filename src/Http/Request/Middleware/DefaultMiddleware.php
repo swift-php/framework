@@ -23,7 +23,7 @@ class DefaultMiddleware implements MiddlewareInterface
                             RequestHandlerInterface $handler): ResponseInterface
     {
         try {
-            $request = $request->withAttribute('middleware',);
+            $request = $request->withAttribute('middleware', MiddlewareManager::getStack());
             return $handler->handle($request);
         }catch (\Throwable $throwable) {
 
