@@ -9,6 +9,7 @@ use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 use Psr\Log\LoggerInterface;
+use Swift\Framework\Http\Request\Middleware\DefaultMiddleware;
 use Swift\Framework\Logger\LoggerFactory;
 use Swift\Framework\Utils\UUID;
 
